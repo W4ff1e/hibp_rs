@@ -1,6 +1,21 @@
 [package]
-name = "hibp-rs"
+name = "hibp_rs"
 version = "0.1.0"
 edition = "2024"
+authors = ["W4ff1e <waffle@throud.org>"]
+description = "A Rust client for the Have I Been Pwned API."
+license-file = "LICENSE"
+repository = "https://github.com/W4ff1e/hibp-rs"
+homepage = "https://github.com/W4ff1e/hibp-rs"
+documentation = "https://docs.rs/hibp-rs"
+readme = "README.md"
+keywords = ["hibp", "haveibeenpwned", "security", "api"]
+categories = ["api-bindings", "web-programming::http-client"]
+rust-version = "1.88"
+exclude = ["/.github", "/.gitignore", "/.vscode", "/target"]
+
+[lib]
+name = "hibp_rs"
+path = "src/lib.rs"
 
 [dependencies]
