@@ -18,7 +18,11 @@ impl HaveIBeenPwned {
         account: &str,
     ) -> Result<Vec<Breach>, Box<dyn std::error::Error>> {
         let encoded_account = urlencoding::encode(account.trim());
-        let url = format!("{}/breachedaccount/{}", self.base_url, encoded_account);
+        // Add ?truncateResponse=false to get full breach details
+        let url = format!(
+            "{}/breachedaccount/{}?truncateResponse=false",
+            self.base_url, encoded_account
+        );
 
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -96,6 +100,38 @@ impl HaveIBeenPwned {
             Err(format!("API request failed with status: {}", resp.status()).into())
         }
     }
+
+    /// Get all pastes for an account (email address).
+    pub fn get_pastes_for_account(
+        &self,
+        account: &str,
+    ) -> Result<Vec<Paste>, Box<dyn std::error::Error>> {
+        let encoded_account = urlencoding::encode(account.trim());
+        let url = format!("{}/pasteaccount/{}", self.base_url, encoded_account);
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            "hibp-api-key",
+            reqwest::header::HeaderValue::from_str(&self.api_key)?,
+        );
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+        );
+
+        let client = reqwest::blocking::Client::new();
+        let resp = client.get(&url).headers(headers).send()?;
+
+        if resp.status().is_success() {
+            let pastes: Vec<Paste> = resp.json()?;
+            Ok(pastes)
+        } else if resp.status().as_u16() == 404 {
+            // No pastes found for the account
+            Ok(vec![])
+        } else {
+            Err(format!("API request failed with status: {}", resp.status()).into())
+        }
+    }
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -138,9 +174,24 @@ pub struct Breach {
     pub is_subscription_free: bool,
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct Paste {
+    #[serde(rename = "Source")]
+    pub source: String,
+    #[serde(rename = "Id")]
+    pub id: String,
+    #[serde(rename = "Title")]
+    pub title: Option<String>,
+    #[serde(rename = "Date")]
+    pub date: Option<String>,
+    #[serde(rename = "EmailCount")]
+    pub email_count: u64,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn client_is_declared_and_initialized_correctly() {
         dotenv::dotenv().ok();
@@ -151,8 +202,51 @@ mod tests {
 
         assert_eq!(hibp.api_key, api_key);
         assert_eq!(hibp.user_agent, "hibp-rs");
-        // Note: This will fail because base_url is set to ".../api/api_version" literally
-        // If you want to use the value of api_version, remove the quotes in the format! macro in the struct
         assert_eq!(hibp.base_url, "https://haveibeenpwned.com/api/v3");
+    }
+
+    #[test]
+    fn test_not_active_breach_returns_no_breaches() {
+        dotenv::dotenv().ok();
+        let api_key = std::env::var("HIBP_API_KEY").expect("HIBP_API_KEY must be set in .env");
+        let hibp = HaveIBeenPwned::new(api_key);
+
+        let result = hibp.get_breaches_for_account("not-active-breach@hibp-integration-tests.com");
+        assert!(result.is_ok(), "API call failed: {:?}", result);
+        let breaches = result.unwrap();
+        assert!(
+            breaches.is_empty(),
+            "Expected no breaches, got: {:?}",
+            breaches
+        );
+    }
+
+    #[test]
+    fn test_account_exists_returns_one_breach() {
+        dotenv::dotenv().ok();
+        let api_key = std::env::var("HIBP_API_KEY").expect("HIBP_API_KEY must be set in .env");
+        let hibp = HaveIBeenPwned::new(api_key);
+
+        let result = hibp.get_breaches_for_account("account-exists@hibp-integration-tests.com");
+        assert!(result.is_ok(), "API call failed: {:?}", result);
+        let breaches = result.unwrap();
+        assert_eq!(
+            breaches.len(),
+            1,
+            "Expected one breach, got: {:?}",
+            breaches
+        );
+    }
+
+    #[test]
+    fn test_account_exists_returns_one_paste() {
+        dotenv::dotenv().ok();
+        let api_key = std::env::var("HIBP_API_KEY").expect("HIBP_API_KEY must be set in .env");
+        let hibp = HaveIBeenPwned::new(api_key);
+
+        let result = hibp.get_pastes_for_account("account-exists@hibp-integration-tests.com");
+        assert!(result.is_ok(), "API call failed: {:?}", result);
+        let pastes = result.unwrap();
+        assert_eq!(pastes.len(), 1, "Expected one paste, got: {:?}", pastes);
     }
 }
