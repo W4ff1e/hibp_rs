@@ -1,10 +1,66 @@
+//! hibp_rs: Rust client for the HaveIBeenPwned API v3.
+//!
+//! This crate provides a synchronous client for querying breaches and pastes
+//! from the HaveIBeenPwned API. You must provide an API key to use authenticated endpoints.
+//!
+//! # Examples
+//!
+//! ```no_run
+//! use hibp_rs::HaveIBeenPwned;
+//!
+//! // Load your API key from an environment variable or other source
+//! let api_key = std::env::var("HIBP_API_KEY").expect("HIBP_API_KEY must be set");
+//! let hibp = HaveIBeenPwned::new(api_key);
+//!
+//! // Query breaches for an account
+//! let breaches = hibp.get_breaches_for_account("account-exists@hibp-integration-tests.com").unwrap();
+//! println!("Breaches: {:?}", breaches);
+//!
+//! // Query all breaches in the system
+//! let all_breaches = hibp.get_all_breaches().unwrap();
+//! println!("All breaches: {:?}", all_breaches);
+//!
+//! // Query a single breach by name
+//! let adobe_breach = hibp.get_breach_by_name("Adobe").unwrap();
+//! println!("Adobe breach: {:?}", adobe_breach);
+//!
+//! // Query pastes for an account
+//! let pastes = hibp.get_pastes_for_account("account-exists@hibp-integration-tests.com").unwrap();
+//! println!("Pastes: {:?}", pastes);
+//! ```
+//!
+//! # Available Functions
+//!
+//! - [`HaveIBeenPwned::new`] - Create a new API client.
+//! - [`HaveIBeenPwned::get_breaches_for_account`] - Get all breaches for a given account.
+//! - [`HaveIBeenPwned::get_all_breaches`] - Get all breaches in the system.
+//! - [`HaveIBeenPwned::get_breach_by_name`] - Get a single breach by its name.
+//! - [`HaveIBeenPwned::get_pastes_for_account`] - Get all pastes for a given account.
+//!
+
+/// Main client for interacting with the HaveIBeenPwned API.
 pub struct HaveIBeenPwned {
+    /// Your HIBP API key.
     pub api_key: String,
+    /// Optional user agent string sent with requests. Usually does not need to be changed.
     pub user_agent: String,
+    /// Optional base URL for the HIBP API. Usually does not need to be changed.
     pub base_url: String,
 }
 
 impl HaveIBeenPwned {
+    /// Creates a new HaveIBeenPwned client.
+    ///
+    /// # Arguments
+    ///
+    /// * `api_key` - Your HIBP API key.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use hibp_rs::HaveIBeenPwned;
+    /// let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// ```
     pub fn new(api_key: String) -> Self {
         HaveIBeenPwned {
             api_key,
@@ -13,6 +69,23 @@ impl HaveIBeenPwned {
         }
     }
 
+    /// Gets all breaches for a given account (email address).
+    ///
+    /// Returns a vector of [`Breach`] if the account has been involved in any breaches,
+    /// or an empty vector if not.
+    ///
+    /// # Arguments
+    ///
+    /// * `account` - The email address to search for.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hibp_rs::HaveIBeenPwned;
+    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// let breaches = hibp.get_breaches_for_account("account-exists@hibp-integration-tests.com").unwrap();
+    /// println!("{:?}", breaches);
+    /// ```
     pub fn get_breaches_for_account(
         &self,
         account: &str,
@@ -48,7 +121,18 @@ impl HaveIBeenPwned {
         }
     }
 
-    /// Get all breaches in the system.
+    /// Gets all breaches in the system.
+    ///
+    /// Returns a vector of all known [`Breach`]es.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hibp_rs::HaveIBeenPwned;
+    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// let all_breaches = hibp.get_all_breaches().unwrap();
+    /// println!("{:?}", all_breaches);
+    /// ```
     pub fn get_all_breaches(&self) -> Result<Vec<Breach>, Box<dyn std::error::Error>> {
         let url = format!("{}/breaches", self.base_url);
 
@@ -73,7 +157,22 @@ impl HaveIBeenPwned {
         }
     }
 
-    /// Get a single breach by name.
+    /// Gets a single breach by its name.
+    ///
+    /// Returns a [`Breach`] if found, or an error if not.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the breach (e.g., "Adobe").
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hibp_rs::HaveIBeenPwned;
+    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// let adobe_breach = hibp.get_breach_by_name("Adobe").unwrap();
+    /// println!("{:?}", adobe_breach);
+    /// ```
     pub fn get_breach_by_name(&self, name: &str) -> Result<Breach, Box<dyn std::error::Error>> {
         let encoded_name = urlencoding::encode(name.trim());
         let url = format!("{}/breach/{}", self.base_url, encoded_name);
@@ -101,7 +200,23 @@ impl HaveIBeenPwned {
         }
     }
 
-    /// Get all pastes for an account (email address).
+    /// Gets all pastes for an account (email address).
+    ///
+    /// Returns a vector of [`Paste`] if any pastes are found for the account,
+    /// or an empty vector if not.
+    ///
+    /// # Arguments
+    ///
+    /// * `account` - The email address to search for.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hibp_rs::HaveIBeenPwned;
+    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// let pastes = hibp.get_pastes_for_account("account-exists@hibp-integration-tests.com").unwrap();
+    /// println!("{:?}", pastes);
+    /// ```
     pub fn get_pastes_for_account(
         &self,
         account: &str,
@@ -134,56 +249,81 @@ impl HaveIBeenPwned {
     }
 }
 
+/// Represents a breach returned by the HIBP API.
 #[derive(Debug, serde::Deserialize)]
 pub struct Breach {
+    /// Name of the breach.
     #[serde(rename = "Name")]
     pub name: String,
+    /// Title of the breach.
     #[serde(rename = "Title")]
     pub title: String,
+    /// Domain associated with the breach.
     #[serde(rename = "Domain")]
     pub domain: String,
+    /// Date the breach occurred.
     #[serde(rename = "BreachDate")]
     pub breach_date: String,
+    /// Date the breach was added to HIBP.
     #[serde(rename = "AddedDate")]
     pub added_date: String,
+    /// Date the breach was last modified.
     #[serde(rename = "ModifiedDate")]
     pub modified_date: String,
+    /// Number of accounts affected.
     #[serde(rename = "PwnCount")]
     pub pwn_count: u64,
+    /// Description of the breach.
     #[serde(rename = "Description")]
     pub description: String,
+    /// Path to the breach logo.
     #[serde(rename = "LogoPath")]
     pub logo_path: String,
+    /// Data classes compromised in the breach.
     #[serde(rename = "DataClasses")]
     pub data_classes: Vec<String>,
+    /// Whether the breach is verified.
     #[serde(rename = "IsVerified")]
     pub is_verified: bool,
+    /// Whether the breach is fabricated.
     #[serde(rename = "IsFabricated")]
     pub is_fabricated: bool,
+    /// Whether the breach is sensitive.
     #[serde(rename = "IsSensitive")]
     pub is_sensitive: bool,
+    /// Whether the breach is retired.
     #[serde(rename = "IsRetired")]
     pub is_retired: bool,
+    /// Whether the breach is a spam list.
     #[serde(rename = "IsSpamList")]
     pub is_spam_list: bool,
+    /// Whether the breach is related to malware.
     #[serde(rename = "IsMalware")]
     pub is_malware: bool,
+    /// Whether the breach is a stealer log.
     #[serde(rename = "IsStealerLog")]
     pub is_stealer_log: bool,
+    /// Whether the breach is subscription-free.
     #[serde(rename = "IsSubscriptionFree")]
     pub is_subscription_free: bool,
 }
 
+/// Represents a paste returned by the HIBP API.
 #[derive(Debug, serde::Deserialize)]
 pub struct Paste {
+    /// Source of the paste (e.g., "Pastebin").
     #[serde(rename = "Source")]
     pub source: String,
+    /// ID of the paste.
     #[serde(rename = "Id")]
     pub id: String,
+    /// Title of the paste, if available.
     #[serde(rename = "Title")]
     pub title: Option<String>,
+    /// Date the paste was posted, if available.
     #[serde(rename = "Date")]
     pub date: Option<String>,
+    /// Number of emails found in the paste.
     #[serde(rename = "EmailCount")]
     pub email_count: u64,
 }
