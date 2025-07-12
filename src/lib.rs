@@ -247,6 +247,80 @@ impl HaveIBeenPwned {
             Err(format!("API request failed with status: {}", resp.status()).into())
         }
     }
+
+    /// Gets all domains the API key is subscribed to.
+    ///
+    /// Returns a vector of [`SubscribedDomain`] for the authenticated API key.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hibp_rs::HaveIBeenPwned;
+    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// let domains = hibp.get_all_subscribed_domains().unwrap();
+    /// println!("{:?}", domains);
+    /// ```
+    pub fn get_all_subscribed_domains(
+        &self,
+    ) -> Result<Vec<SubscribedDomain>, Box<dyn std::error::Error>> {
+        let url = format!("{}/subscribed", self.base_url);
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            "hibp-api-key",
+            reqwest::header::HeaderValue::from_str(&self.api_key)?,
+        );
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+        );
+
+        let client = reqwest::blocking::Client::new();
+        let resp = client.get(&url).headers(headers).send()?;
+
+        if resp.status().is_success() {
+            let domains: Vec<SubscribedDomain> = resp.json()?;
+            Ok(domains)
+        } else {
+            Err(format!("API request failed with status: {}", resp.status()).into())
+        }
+    }
+
+    /// Gets the most recently added breach in the system.
+    ///
+    /// Returns a [`Breach`] representing the latest breach.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use hibp_rs::HaveIBeenPwned;
+    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// let latest_breach = hibp.get_latest_breach().unwrap();
+    /// println!("{:?}", latest_breach);
+    /// ```
+    pub fn get_latest_breach(&self) -> Result<Breach, Box<dyn std::error::Error>> {
+        let url = format!("{}/latestbreach", self.base_url);
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            "hibp-api-key",
+            reqwest::header::HeaderValue::from_str(&self.api_key)?,
+        );
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+        );
+
+        let client = reqwest::blocking::Client::new();
+        let resp = client.get(&url).headers(headers).send()?;
+
+        if resp.status().is_success() {
+            let breach: Breach = resp.json()?;
+            Ok(breach)
+        } else {
+            Err(format!("API request failed with status: {}", resp.status()).into())
+        }
+    }
 }
 
 /// Represents a breach returned by the HIBP API.
@@ -326,6 +400,20 @@ pub struct Paste {
     /// Number of emails found in the paste.
     #[serde(rename = "EmailCount")]
     pub email_count: u64,
+}
+
+/// Represents a domain subscription returned by the HIBP API.
+#[derive(Debug, serde::Deserialize)]
+pub struct SubscribedDomain {
+    /// The domain name.
+    #[serde(rename = "domainName")]
+    pub domain_name: String,
+    /// The date the domain was added.
+    #[serde(rename = "dateAdded")]
+    pub date_added: String,
+    /// The date the domain subscription expires.
+    #[serde(rename = "dateExpires")]
+    pub date_expires: String,
 }
 
 #[cfg(test)]
