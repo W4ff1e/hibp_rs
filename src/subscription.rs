@@ -20,6 +20,20 @@ pub struct SubscriptionStatus {
     pub includes_stealer_logs: bool,
 }
 
+/// Represents a domain subscription returned by the HIBP API.
+#[derive(Debug, serde::Deserialize)]
+pub struct SubscribedDomain {
+    /// The domain name.
+    #[serde(rename = "domainName")]
+    pub domain_name: String,
+    /// The date the domain was added.
+    #[serde(rename = "dateAdded")]
+    pub date_added: String,
+    /// The date the domain subscription expires.
+    #[serde(rename = "dateExpires")]
+    pub date_expires: String,
+}
+
 /// Rate limiter to ensure we don't exceed API limits
 #[derive(Debug, Clone)]
 pub struct RateLimiter {
@@ -82,6 +96,26 @@ impl HaveIBeenPwned {
         if resp.status().is_success() {
             let status: SubscriptionStatus = resp.json().await?;
             Ok(status)
+        } else {
+            Err(format!("API request failed with status: {}", resp.status()).into())
+        }
+    }
+
+    /// Gets all domains the API key is subscribed to.
+    pub async fn get_all_subscribed_domains(
+        &self,
+    ) -> Result<Vec<SubscribedDomain>, Box<dyn std::error::Error>> {
+        if let Some(rate_limiter) = &self.rate_limiter {
+            rate_limiter.wait_if_needed().await;
+        }
+
+        let url = format!("{}/subscribed", self.base_url);
+        let headers = self.create_headers()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
+
+        if resp.status().is_success() {
+            let domains: Vec<SubscribedDomain> = resp.json().await?;
+            Ok(domains)
         } else {
             Err(format!("API request failed with status: {}", resp.status()).into())
         }

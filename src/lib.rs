@@ -93,10 +93,10 @@ mod paste;
 mod stealer;
 mod subscription;
 
-pub use breach::{Breach, SubscribedDomain};
+pub use breach::Breach;
 pub use password::PwnedPassword;
 pub use paste::Paste;
-pub use subscription::{RateLimiter, SubscriptionStatus};
+pub use subscription::{RateLimiter, SubscribedDomain, SubscriptionStatus};
 
 use reqwest::Client;
 

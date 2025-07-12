@@ -48,7 +48,6 @@ impl HaveIBeenPwned {
 
         let encoded_account = urlencoding::encode(account.trim());
         let url = format!("{}/pasteaccount/{}", self.base_url, encoded_account);
-
         let headers = self.create_headers()?;
         let resp = self.client.get(&url).headers(headers).send().await?;
 
