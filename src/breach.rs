@@ -1,5 +1,5 @@
 use crate::HaveIBeenPwned;
-use reqwest;
+use reqwest::header::{HeaderMap, HeaderValue};
 use urlencoding;
 
 /// Represents a breach returned by the HIBP API.
@@ -77,7 +77,7 @@ pub struct SubscribedDomain {
 
 impl HaveIBeenPwned {
     /// Gets all breaches for a given account (email address).
-    pub fn get_breaches_for_account(
+    pub async fn get_breaches_for_account(
         &self,
         account: &str,
     ) -> Result<Vec<Breach>, Box<dyn std::error::Error>> {
@@ -87,21 +87,17 @@ impl HaveIBeenPwned {
             self.base_url, encoded_account
         );
 
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
-        );
+        let mut headers = HeaderMap::new();
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let breaches: Vec<Breach> = resp.json()?;
+            let breaches: Vec<Breach> = resp.json().await?;
             Ok(breaches)
         } else if resp.status().as_u16() == 404 {
             Ok(vec![])
@@ -111,24 +107,20 @@ impl HaveIBeenPwned {
     }
 
     /// Gets all breaches in the system.
-    pub fn get_all_breaches(&self) -> Result<Vec<Breach>, Box<dyn std::error::Error>> {
+    pub async fn get_all_breaches(&self) -> Result<Vec<Breach>, Box<dyn std::error::Error>> {
         let url = format!("{}/breaches", self.base_url);
 
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
-        );
+        let mut headers = HeaderMap::new();
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let breaches: Vec<Breach> = resp.json()?;
+            let breaches: Vec<Breach> = resp.json().await?;
             Ok(breaches)
         } else {
             Err(format!("API request failed with status: {}", resp.status()).into())
@@ -136,25 +128,24 @@ impl HaveIBeenPwned {
     }
 
     /// Gets a single breach by its name.
-    pub fn get_breach_by_name(&self, name: &str) -> Result<Breach, Box<dyn std::error::Error>> {
+    pub async fn get_breach_by_name(
+        &self,
+        name: &str,
+    ) -> Result<Breach, Box<dyn std::error::Error>> {
         let encoded_name = urlencoding::encode(name.trim());
         let url = format!("{}/breach/{}", self.base_url, encoded_name);
 
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
-        );
+        let mut headers = HeaderMap::new();
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let breach: Breach = resp.json()?;
+            let breach: Breach = resp.json().await?;
             Ok(breach)
         } else if resp.status().as_u16() == 404 {
             Err("Breach not found".into())
@@ -164,26 +155,22 @@ impl HaveIBeenPwned {
     }
 
     /// Gets all domains the API key is subscribed to.
-    pub fn get_all_subscribed_domains(
+    pub async fn get_all_subscribed_domains(
         &self,
     ) -> Result<Vec<SubscribedDomain>, Box<dyn std::error::Error>> {
         let url = format!("{}/subscribed", self.base_url);
 
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
-        );
+        let mut headers = HeaderMap::new();
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let domains: Vec<SubscribedDomain> = resp.json()?;
+            let domains: Vec<SubscribedDomain> = resp.json().await?;
             Ok(domains)
         } else {
             Err(format!("API request failed with status: {}", resp.status()).into())
@@ -191,24 +178,20 @@ impl HaveIBeenPwned {
     }
 
     /// Gets the most recently added breach in the system.
-    pub fn get_latest_breach(&self) -> Result<Breach, Box<dyn std::error::Error>> {
+    pub async fn get_latest_breach(&self) -> Result<Breach, Box<dyn std::error::Error>> {
         let url = format!("{}/latestbreach", self.base_url);
 
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
-        );
+        let mut headers = HeaderMap::new();
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let breach: Breach = resp.json()?;
+            let breach: Breach = resp.json().await?;
             Ok(breach)
         } else {
             Err(format!("API request failed with status: {}", resp.status()).into())

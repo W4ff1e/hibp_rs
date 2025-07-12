@@ -1,5 +1,4 @@
 use crate::HaveIBeenPwned;
-use reqwest;
 use urlencoding;
 
 /// Represents a paste returned by the HIBP API.
@@ -24,28 +23,37 @@ pub struct Paste {
 
 impl HaveIBeenPwned {
     /// Gets all pastes for an account (email address).
-    pub fn get_pastes_for_account(
+    ///
+    /// # Arguments
+    ///
+    /// * `account` - The email address to search for.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use hibp_rs::HaveIBeenPwned;
+    /// # async fn example() {
+    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// let pastes = hibp.get_pastes_for_account("test@example.com").await.unwrap();
+    /// println!("{:?}", pastes);
+    /// # }
+    /// ```
+    pub async fn get_pastes_for_account(
         &self,
         account: &str,
     ) -> Result<Vec<Paste>, Box<dyn std::error::Error>> {
+        if let Some(rate_limiter) = &self.rate_limiter {
+            rate_limiter.wait_if_needed().await;
+        }
+
         let encoded_account = urlencoding::encode(account.trim());
         let url = format!("{}/pasteaccount/{}", self.base_url, encoded_account);
 
-        let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
-        );
-        headers.insert(
-            reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
-        );
-
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let headers = self.create_headers()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let pastes: Vec<Paste> = resp.json()?;
+            let pastes: Vec<Paste> = resp.json().await?;
             Ok(pastes)
         } else if resp.status().as_u16() == 404 {
             Ok(vec![])

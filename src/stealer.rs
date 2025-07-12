@@ -1,5 +1,5 @@
 use crate::HaveIBeenPwned;
-use reqwest;
+use reqwest::header::{HeaderMap, HeaderValue};
 use urlencoding;
 
 /// Represents a stealer log email address.
@@ -38,31 +38,32 @@ impl HaveIBeenPwned {
     /// ```
     /// # use hibp_rs::HaveIBeenPwned;
     /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
-    /// let emails = hibp.get_stealer_log_emails_for_domain("example.com").unwrap();
+    /// # async {
+    /// let emails = hibp.get_stealer_log_emails_for_domain("example.com").await.unwrap();
     /// println!("{:?}", emails);
+    /// # };
     /// ```
-    pub fn get_stealer_log_emails_for_domain(
+    pub async fn get_stealer_log_emails_for_domain(
         &self,
         domain: &str,
     ) -> Result<Vec<StealerLogEmail>, Box<dyn std::error::Error>> {
         let encoded_domain = urlencoding::encode(domain.trim());
         let url = format!("{}/stealerlog/domain/{}", self.base_url, encoded_domain);
 
-        let mut headers = reqwest::header::HeaderMap::new();
+        let mut headers = HeaderMap::new();
         headers.insert(
             "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
+            HeaderValue::from_str(&self.api_key)?,
         );
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let emails: Vec<StealerLogEmail> = resp.json()?;
+            let emails: Vec<StealerLogEmail> = resp.json().await?;
             Ok(emails)
         } else if resp.status().as_u16() == 404 {
             Ok(vec![])
@@ -82,31 +83,32 @@ impl HaveIBeenPwned {
     /// ```
     /// # use hibp_rs::HaveIBeenPwned;
     /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
-    /// let aliases = hibp.get_stealer_log_aliases_for_domain("example.com").unwrap();
+    /// # async {
+    /// let aliases = hibp.get_stealer_log_aliases_for_domain("example.com").await.unwrap();
     /// println!("{:?}", aliases);
+    /// # };
     /// ```
-    pub fn get_stealer_log_aliases_for_domain(
+    pub async fn get_stealer_log_aliases_for_domain(
         &self,
         domain: &str,
     ) -> Result<Vec<StealerLogAlias>, Box<dyn std::error::Error>> {
         let encoded_domain = urlencoding::encode(domain.trim());
         let url = format!("{}/stealerlog/alias/{}", self.base_url, encoded_domain);
 
-        let mut headers = reqwest::header::HeaderMap::new();
+        let mut headers = HeaderMap::new();
         headers.insert(
             "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
+            HeaderValue::from_str(&self.api_key)?,
         );
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let aliases: Vec<StealerLogAlias> = resp.json()?;
+            let aliases: Vec<StealerLogAlias> = resp.json().await?;
             Ok(aliases)
         } else if resp.status().as_u16() == 404 {
             Ok(vec![])
@@ -126,31 +128,32 @@ impl HaveIBeenPwned {
     /// ```
     /// # use hibp_rs::HaveIBeenPwned;
     /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
-    /// let domains = hibp.get_stealer_log_domains_for_email("stealer-log@hibp-integration-tests.com").unwrap();
+    /// # async {
+    /// let domains = hibp.get_stealer_log_domains_for_email("test@example.com").await.unwrap();
     /// println!("{:?}", domains);
+    /// # };
     /// ```
-    pub fn get_stealer_log_domains_for_email(
+    pub async fn get_stealer_log_domains_for_email(
         &self,
         email: &str,
     ) -> Result<Vec<StealerLogDomain>, Box<dyn std::error::Error>> {
         let encoded_email = urlencoding::encode(email.trim());
         let url = format!("{}/stealerlog/email/{}", self.base_url, encoded_email);
 
-        let mut headers = reqwest::header::HeaderMap::new();
+        let mut headers = HeaderMap::new();
         headers.insert(
             "hibp-api-key",
-            reqwest::header::HeaderValue::from_str(&self.api_key)?,
+            HeaderValue::from_str(&self.api_key)?,
         );
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_str(&self.user_agent)?,
+            HeaderValue::from_str(&self.user_agent)?,
         );
 
-        let client = reqwest::blocking::Client::new();
-        let resp = client.get(&url).headers(headers).send()?;
+        let resp = self.client.get(&url).headers(headers).send().await?;
 
         if resp.status().is_success() {
-            let domains: Vec<StealerLogDomain> = resp.json()?;
+            let domains: Vec<StealerLogDomain> = resp.json().await?;
             Ok(domains)
         } else if resp.status().as_u16() == 404 {
             Ok(vec![])
