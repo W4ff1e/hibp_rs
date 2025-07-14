@@ -55,6 +55,38 @@
 //! # }
 //! ```
 //!
+//! # Concurrent Operations
+//!
+//! The client implements `Clone` to support concurrent operations. This allows you to create
+//! multiple instances for parallel API calls while maintaining the same configuration:
+//!
+//! ```no_run
+//! # use hibp_rs::HaveIBeenPwned;
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let hibp = HaveIBeenPwned::new_with_rate_limit("your-api-key".to_string(), 100);
+//!
+//! // Clone the client for concurrent operations
+//! let hibp_clone1 = hibp.clone();
+//! let hibp_clone2 = hibp.clone();
+//!
+//! // Use in parallel tasks
+//! let task1 = tokio::spawn(async move {
+//!     hibp_clone1.get_breaches_for_account("user1@example.com").await
+//! });
+//!
+//! let task2 = tokio::spawn(async move {
+//!     hibp_clone2.get_breaches_for_account("user2@example.com").await
+//! });
+//!
+//! // Wait for both to complete
+//! let (result1, result2) = tokio::join!(task1, task2);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! **Note:** Rate limiting is shared across clones, so concurrent operations will still
+//! respect your configured rate limits.
+//!
 //! # Available Functions
 //!
 //! ## Client Creation
@@ -101,7 +133,7 @@ pub use subscription::{RateLimiter, SubscribedDomain, SubscriptionStatus};
 use reqwest::Client;
 
 /// Main client for interacting with the HaveIBeenPwned API.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HaveIBeenPwned {
     /// Your HIBP API key.
     pub api_key: String,
@@ -513,5 +545,53 @@ mod tests {
         if let Ok(hibp5) = HaveIBeenPwned::new_with_auto_rate_limit("test-api-key-4").await {
             assert_eq!(hibp5.api_key, "test-api-key-4");
         }
+    }
+
+    #[tokio::test]
+    async fn test_clone_for_concurrent_operations() {
+        // Test basic clone functionality
+        let hibp = HaveIBeenPwned::new("test-api-key");
+        let hibp_clone = hibp.clone();
+
+        // Verify cloned client has same properties
+        assert_eq!(hibp.api_key, hibp_clone.api_key);
+        assert_eq!(hibp.user_agent, hibp_clone.user_agent);
+        assert_eq!(hibp.base_url, hibp_clone.base_url);
+
+        // Test clone with rate limiter
+        let hibp_with_rate_limit = HaveIBeenPwned::new_with_rate_limit("test-api-key", 100);
+        let hibp_rate_limit_clone = hibp_with_rate_limit.clone();
+
+        assert_eq!(hibp_with_rate_limit.api_key, hibp_rate_limit_clone.api_key);
+        assert!(hibp_rate_limit_clone.rate_limiter.is_some());
+
+        // Test concurrent usage simulation (compile-time check)
+        let hibp_original = HaveIBeenPwned::new("test-api-key");
+        let hibp_clone1 = hibp_original.clone();
+        let hibp_clone2 = hibp_original.clone();
+
+        // Verify all instances are independent
+        assert_eq!(hibp_original.api_key, hibp_clone1.api_key);
+        assert_eq!(hibp_original.api_key, hibp_clone2.api_key);
+
+        // Test that we can move clones into different async contexts
+        let handle1 = tokio::spawn(async move {
+            // This would normally make an API call, but for testing we just verify the client exists
+            assert_eq!(hibp_clone1.api_key, "test-api-key");
+            "task1_complete"
+        });
+
+        let handle2 = tokio::spawn(async move {
+            // This would normally make an API call, but for testing we just verify the client exists
+            assert_eq!(hibp_clone2.api_key, "test-api-key");
+            "task2_complete"
+        });
+
+        // Wait for both tasks to complete
+        let result1 = handle1.await.unwrap();
+        let result2 = handle2.await.unwrap();
+
+        assert_eq!(result1, "task1_complete");
+        assert_eq!(result2, "task2_complete");
     }
 }
