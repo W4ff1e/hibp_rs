@@ -37,7 +37,7 @@ impl HaveIBeenPwned {
     ///
     /// ```
     /// # use hibp_rs::HaveIBeenPwned;
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// # async {
     /// let emails = hibp.get_stealer_log_emails_for_domain("example.com").await.unwrap();
     /// println!("{:?}", emails);
@@ -51,10 +51,7 @@ impl HaveIBeenPwned {
         let url = format!("{}/stealerlog/domain/{}", self.base_url, encoded_domain);
 
         let mut headers = HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            HeaderValue::from_str(&self.api_key)?,
-        );
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
             HeaderValue::from_str(&self.user_agent)?,
@@ -82,7 +79,7 @@ impl HaveIBeenPwned {
     ///
     /// ```
     /// # use hibp_rs::HaveIBeenPwned;
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// # async {
     /// let aliases = hibp.get_stealer_log_aliases_for_domain("example.com").await.unwrap();
     /// println!("{:?}", aliases);
@@ -96,10 +93,7 @@ impl HaveIBeenPwned {
         let url = format!("{}/stealerlog/alias/{}", self.base_url, encoded_domain);
 
         let mut headers = HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            HeaderValue::from_str(&self.api_key)?,
-        );
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
             HeaderValue::from_str(&self.user_agent)?,
@@ -127,7 +121,7 @@ impl HaveIBeenPwned {
     ///
     /// ```
     /// # use hibp_rs::HaveIBeenPwned;
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// # async {
     /// let domains = hibp.get_stealer_log_domains_for_email("test@example.com").await.unwrap();
     /// println!("{:?}", domains);
@@ -141,10 +135,7 @@ impl HaveIBeenPwned {
         let url = format!("{}/stealerlog/email/{}", self.base_url, encoded_email);
 
         let mut headers = HeaderMap::new();
-        headers.insert(
-            "hibp-api-key",
-            HeaderValue::from_str(&self.api_key)?,
-        );
+        headers.insert("hibp-api-key", HeaderValue::from_str(&self.api_key)?);
         headers.insert(
             reqwest::header::USER_AGENT,
             HeaderValue::from_str(&self.user_agent)?,

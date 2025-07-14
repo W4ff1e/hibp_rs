@@ -1,8 +1,30 @@
 # hibp_rs
 
+[![Crates.io](https://img.shields.io/crates/v/hibp_rs)](https://crates.io/crates/hibp_rs)
+[![Documentation](https://docs.rs/hibp_rs/badge.svg)](https://docs.rs/hibp_rs)
+[![GitHub License](https://img.shields.io/github/license/W4ff1e/hibp_rs)](https://github.com/W4ff1e/hibp_rs/blob/main/LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.88%2B-blue.svg)](https://www.rust-lang.org)
+
 ## Overview
 
 **hibp_rs** is a modern, async Rust client for the HaveIBeenPwned API. It provides a robust, well-documented interface for querying breach data, checking compromised passwords, and managing API rate limits automatically.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Basic Usage](#basic-usage)
+  - [Rate Limiting Options](#rate-limiting-options)
+  - [Enhanced Privacy with Padding](#enhanced-privacy-with-padding)
+- [Development](#development)
+  - [Prerequisites](#prerequisites)
+  - [Building](#building)
+  - [Running Tests](#running-tests)
+- [Contributing](#contributing)
+- [License](#license)
+- [Authors](#authors)
+- [Repository](#repository)
 
 ## Features
 
@@ -31,6 +53,8 @@ Add `hibp_rs` to your `Cargo.toml`:
 hibp_rs = "0.1"
 tokio = { version = "1.0", features = ["full"] } # Required for async support
 ```
+
+**Note:** You'll need a HIBP API key to use this library. Get one at [haveibeenpwned.com/API/Key](https://haveibeenpwned.com/API/Key).
 
 ## Usage
 
@@ -95,13 +119,44 @@ let count = client.check_password("my_password").await?;
 let count = client.check_password_padded("my_password").await?;
 ```
 
+### Concurrent Operations
+
+The client implements `Clone` for safe concurrent operations:
+
+```rust
+use hibp_rs::HaveIBeenPwned;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = HaveIBeenPwned::new_with_rate_limit("your-api-key", 100);
+    
+    // Clone for concurrent use
+    let client1 = client.clone();
+    let client2 = client.clone();
+    
+    // Run concurrent operations
+    let task1 = tokio::spawn(async move {
+        client1.get_breaches_for_account("user1@example.com").await
+    });
+    
+    let task2 = tokio::spawn(async move {
+        client2.get_breaches_for_account("user2@example.com").await
+    });
+    
+    let (result1, result2) = tokio::join!(task1, task2);
+    // Rate limiting is automatically shared across clones
+    
+    Ok(())
+}
+```
+
 See the [API documentation](https://docs.rs/hibp_rs) for complete usage details.
 
 ## Development
 
 ### Prerequisites
 
-- [Rust](https://www.rust-lang.org/tools/install) 1.56 or later
+- [Rust](https://www.rust-lang.org/tools/install) 1.88 or later
 - [Cargo](https://doc.rust-lang.org/cargo/)
 - A HIBP API key (get one at [haveibeenpwned.com](https://haveibeenpwned.com/API/Key))
 
@@ -135,8 +190,7 @@ Please make sure to update tests as appropriate and follow the existing code sty
 
 ## License
 
-This project is licensed under the MIT License.  
-![GitHub License](https://img.shields.io/github/license/W4ff1e/hibp_rs)
+This project is licensed under the MIT License.
 
 ## Authors
 

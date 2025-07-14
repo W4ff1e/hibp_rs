@@ -33,7 +33,7 @@ impl HaveIBeenPwned {
     /// ```no_run
     /// # use hibp_rs::HaveIBeenPwned;
     /// # async fn example() {
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// let pastes = hibp.get_pastes_for_account("test@example.com").await.unwrap();
     /// println!("{:?}", pastes);
     /// # }

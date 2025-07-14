@@ -19,7 +19,7 @@
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a client with automatic rate limiting based on your subscription
-//! let hibp = HaveIBeenPwned::new_with_auto_rate_limit("your-api-key".to_string()).await?;
+//! let hibp = HaveIBeenPwned::new_with_auto_rate_limit("your-api-key").await?;
 //!
 //! // Check for breaches
 //! let breaches = hibp.get_breaches_for_account("test@example.com").await?;
@@ -44,13 +44,13 @@
 //! # use hibp_rs::HaveIBeenPwned;
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // 1. Automatic (recommended) - configures based on your subscription
-//! let client = HaveIBeenPwned::new_with_auto_rate_limit("your-api-key".to_string()).await?;
+//! let client = HaveIBeenPwned::new_with_auto_rate_limit("your-api-key").await?;
 //!
 //! // 2. Manual - specify your own rate limit
-//! let client = HaveIBeenPwned::new_with_rate_limit("your-api-key".to_string(), 100);
+//! let client = HaveIBeenPwned::new_with_rate_limit("your-api-key", 100);
 //!
 //! // 3. None (not recommended) - no rate limiting
-//! let client = HaveIBeenPwned::new("your-api-key".to_string());
+//! let client = HaveIBeenPwned::new("your-api-key");
 //! # Ok(())
 //! # }
 //! ```
@@ -63,7 +63,7 @@
 //! ```no_run
 //! # use hibp_rs::HaveIBeenPwned;
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let hibp = HaveIBeenPwned::new_with_rate_limit("your-api-key".to_string(), 100);
+//! let hibp = HaveIBeenPwned::new_with_rate_limit("your-api-key", 100);
 //!
 //! // Clone the client for concurrent operations
 //! let hibp_clone1 = hibp.clone();

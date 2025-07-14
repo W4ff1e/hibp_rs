@@ -77,7 +77,7 @@ impl HaveIBeenPwned {
     /// ```no_run
     /// # use hibp_rs::HaveIBeenPwned;
     /// # async fn example() {
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// let status = hibp.get_subscription_status().await.unwrap();
     /// println!("Subscription: {}, RPM: {}", status.subscription_name, status.rpm);
     /// # }

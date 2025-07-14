@@ -22,7 +22,7 @@ impl HaveIBeenPwned {
     /// ```no_run
     /// # use hibp_rs::HaveIBeenPwned;
     /// # async fn example() {
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// let results = hibp.search_password_range("CBF2D").await.unwrap();
     /// for pwd in results {
     ///     println!("Hash suffix: {}, Count: {}", pwd.hash_suffix, pwd.count);
@@ -70,7 +70,7 @@ impl HaveIBeenPwned {
     /// ```no_run
     /// # use hibp_rs::HaveIBeenPwned;
     /// # async fn example() {
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// let results = hibp.search_password_range_padded("CBF2D").await.unwrap();
     /// for pwd in results {
     ///     if pwd.count > 0 {
@@ -122,7 +122,7 @@ impl HaveIBeenPwned {
     /// ```no_run
     /// # use hibp_rs::HaveIBeenPwned;
     /// # async fn example() {
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// let count = hibp.check_password("password123").await.unwrap();
     /// println!("This password was found {} times in data breaches", count);
     /// # }
@@ -156,7 +156,7 @@ impl HaveIBeenPwned {
     /// ```no_run
     /// # use hibp_rs::HaveIBeenPwned;
     /// # async fn example() {
-    /// # let hibp = HaveIBeenPwned::new("your_api_key".to_string());
+    /// # let hibp = HaveIBeenPwned::new("your_api_key");
     /// let count = hibp.check_password_padded("password123").await.unwrap();
     /// println!("This password was found {} times in data breaches", count);
     /// # }
