@@ -4,29 +4,6 @@
 
 **hibp_rs** is a modern, async Rust client for the HaveIBeenPwned API. It provides a robust, well-documented interface for querying breach data, checking compromised passwords, and managing API rate limits automatically.
 
-- **Automatic** (recommended):
-
-```rust
-// Works with string literals
-let client = HaveIBeenPwned::new_with_auto_rate_limit("your-api-key").await?;
-
-// Also works with String or other types that can be converted to String
-let api_key = std::env::var("HIBP_API_KEY")?;
-let client = HaveIBeenPwned::new_with_auto_rate_limit(api_key).await?;
-```
-
-- **Manual**:
-
-```rust
-let client = HaveIBeenPwned::new_with_rate_limit("your-api-key", 100); // 100 requests per minute
-```
-
-- **None** (not recommended):
-
-```rust
-let client = HaveIBeenPwned::new("your-api-key");
-```
-
 ## Features
 
 - [x] Full async/await support for efficient non-blocking requests
