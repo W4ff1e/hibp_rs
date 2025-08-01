@@ -201,5 +201,11 @@ This project is licensed under the MIT License.
 
 For more information, visit the [GitHub repository](https://github.com/W4ff1e/hibp_rs).
 
+## Stats
+
+![Alt](https://repobeats.axiom.co/api/embed/b9099919f4df32c905451d5325f949dfb2d4a094.svg "Repobeats analytics image")
+
+---
+
 <!-- markdownlint-disable-next-line -->
 ###### Made with :yellow_heart: by [Waffle](https://github.com/W4ff1e) in collaboration with GitHub Copilot
